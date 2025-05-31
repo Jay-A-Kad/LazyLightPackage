@@ -14,7 +14,7 @@ public class LazyLightGenerator : EditorWindow
     {
         GUILayout.Label("Scene Lighting Generator", EditorStyles.boldLabel);
 
-        if (GUILayout.Button("Generate Light If Scene Is Dark"))
+        if (GUILayout.Button("Generate Light"))
         {
             GenerateLightIfNoneExists();
         }
@@ -42,37 +42,48 @@ public class LazyLightGenerator : EditorWindow
         }
 
         int lightCount = Mathf.Clamp((int)(bounds.size.magnitude / 10f), 1, 3);
+        Vector3 center = bounds.center;
+        float ceilingY = bounds.max.y + 1.0f;
 
         for (int i = 0; i < lightCount; i++)
         {
             GameObject lightGO = new GameObject($"SmartLight_{i}");
             Light light = lightGO.AddComponent<Light>();
 
-            // Use Spot or Point light
+            // Choose light type
             light.type = (Random.value > 0.5f) ? LightType.Spot : LightType.Point;
-            light.intensity = Random.Range(1.5f, 3.5f);
-            light.range = Mathf.Max(bounds.size.x, bounds.size.z) * 0.8f;
-            light.color = Random.ColorHSV(0f, 1f, 0.7f, 1f, 0.9f, 1f);
 
-            Vector3 center = bounds.center;
-            float ceilingY = bounds.max.y + 1.5f;
+            // Color: either warm yellow or cool white
+            light.color = (Random.value > 0.5f)
+                ? new Color(1.0f, 0.95f, 0.8f) // warm indoor
+                : Color.white;
 
-            Vector3 randomOffset = new Vector3(
-                Random.Range(-bounds.extents.x * 0.5f, bounds.extents.x * 0.5f),
+            // Realistic intensity and falloff
+            light.intensity = Random.Range(3.0f, 6.0f); // stronger for real lighting
+            light.range = Mathf.Max(bounds.size.x, bounds.size.z) * 1.2f;
+
+            // Shadows
+            light.shadows = LightShadows.Soft;
+            light.shadowStrength = 0.8f;
+
+            // Position inside ceiling area
+            Vector3 offset = new Vector3(
+                Random.Range(-bounds.extents.x * 0.4f, bounds.extents.x * 0.4f),
                 0f,
-                Random.Range(-bounds.extents.z * 0.5f, bounds.extents.z * 0.5f)
+                Random.Range(-bounds.extents.z * 0.4f, bounds.extents.z * 0.4f)
             );
 
-            light.transform.position = center + randomOffset + Vector3.up * bounds.extents.y;
+            light.transform.position = center + offset + Vector3.up * (bounds.extents.y + 1.0f);
 
             if (light.type == LightType.Spot)
             {
-                light.spotAngle = Random.Range(40f, 80f);
+                light.spotAngle = Random.Range(45f, 70f);
+                light.innerSpotAngle = light.spotAngle * 0.6f;
                 light.transform.LookAt(center);
             }
         }
 
-        Debug.Log($" placed {lightCount} lights within scene bounds.");
+        Debug.Log($" placed {lightCount} lights in the scene");
     }
 
     static Bounds CalculateSceneBounds()
