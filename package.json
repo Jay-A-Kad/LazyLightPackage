@@ -1,0 +1,12 @@
+{
+  "name": "com.Jay-A-Kad.lazylight",
+  "version": "1.0.0",
+  "displayName": "Lazy Light Generator",
+  "description": "Auto-generates intelligent lighting in dark Unity scenes.",
+  "unity": "2020.3",
+  "author": {
+    "name": "Jay kadam",
+    "url": "https://https://github.com/Jay-A-Kad/LazyLightPackage"
+  }
+}
+
