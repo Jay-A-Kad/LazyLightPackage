@@ -1,5 +1,5 @@
 {
-  "name": "com.Jay-A-Kad.lazylight",
+  "name": "com.jayakad.lazylight",
   "version": "1.0.0",
   "displayName": "Lazy Light Generator",
   "description": "Auto-generates intelligent lighting in dark Unity scenes.",
@@ -9,4 +9,3 @@
     "url": "https://https://github.com/Jay-A-Kad/LazyLightPackage"
   }
 }
-
