@@ -74,7 +74,6 @@ Click **"Generate Lights"**. This will:
 ## File Structure
 Assets/Editor/LazyLightGenerator.cs
 
-
 ---
 
 ## Technical Documentation
@@ -97,7 +96,15 @@ Assets/Editor/LazyLightGenerator.cs
 - Set to `Realtime` mode, refreshing `EveryFrame`
 
 ## Test Photos
+###Before
 
+<img width="1364" alt="before_2" src="https://github.com/user-attachments/assets/d681b8ea-b321-4ac7-93b7-698b31eb5c30" />
+<img width="1364" alt="Before_1" src="https://github.com/user-attachments/assets/c0f536b3-0510-4a67-98c9-fe3579de4a1c" />
+
+###After
+<img width="955" alt="after_3" src="https://github.com/user-attachments/assets/eb656b0d-3462-497f-9f2b-26f18ce2ac1d" />
+<img width="961" alt="after_2" src="https://github.com/user-attachments/assets/622cd8ac-4c72-45cb-a2cd-60702eb79a35" />
+<img width="1143" alt="after_1" src="https://github.com/user-attachments/assets/abf5a3cf-22c5-44ff-bc61-091978dd24dc" />
 
 
 ## ToDo List
