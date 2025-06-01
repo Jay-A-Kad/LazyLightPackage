@@ -33,11 +33,15 @@ public class LazyLightGenerator : EditorWindow
         if (presets != null && presets.Length > 0)
         {
             selectedPresetIndex = EditorGUILayout.Popup("Lighting Preset", selectedPresetIndex, presets.Select(p => p.name).ToArray());
-        }
 
-        if (GUILayout.Button("Generate Light"))
+            if (GUILayout.Button("Generate Light"))
+            {
+                GenerateLightWithPreset(presets[selectedPresetIndex]);
+            }
+        }
+        else
         {
-            GenerateLightWithPreset(presets[selectedPresetIndex]);
+            EditorGUILayout.HelpBox("No lighting presets found. Try reimporting or recompiling.", MessageType.Warning);
         }
 
         if (GUILayout.Button("Delete All Lights"))
@@ -55,6 +59,7 @@ public class LazyLightGenerator : EditorWindow
             ImportLightingFromJson();
         }
     }
+
 
     void CreateDefaultPresets()
     {
