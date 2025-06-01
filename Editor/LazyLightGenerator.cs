@@ -22,15 +22,15 @@ public class LazyLightGenerator : EditorWindow
     private bool enableGI = false;
     private bool previewLightPlacement = true;
 
-    [MenuItem("Tools/Advanced Light Generator")]
+    [MenuItem("Tools/Lazy Light Generator")]
     public static void ShowWindow()
     {
-        GetWindow<LazyLightGenerator>("Advanced Light Generator");
+        GetWindow<LazyLightGenerator>("Lazy Light Generator");
     }
 
     void OnGUI()
     {
-        GUILayout.Label("\ud83d\udd27 Pro Lighting Tool", EditorStyles.boldLabel);
+        GUILayout.Label("\ud83d\udd27 Lazy Lighting Tool", EditorStyles.boldLabel);
 
         lightType = (LightType)EditorGUILayout.EnumPopup("Light Type", lightType);
         lightColor = EditorGUILayout.ColorField("Light Color", lightColor);
@@ -102,7 +102,7 @@ public class LazyLightGenerator : EditorWindow
         Bounds bounds = CalculateSceneBounds();
         if (bounds.size == Vector3.zero)
         {
-            Debug.LogWarning("Scene has no renderers to calculate bounds.");
+            Debug.LogWarning("Scene has no renderers to calculate bounds");
             return;
         }
 
@@ -202,7 +202,7 @@ public class LazyLightGenerator : EditorWindow
         Light[] lights = Object.FindObjectsOfType<Light>();
         var export = lights.Where(l => l.gameObject.tag == groupTag).Select(l => new SerializedLight(l)).ToList();
         File.WriteAllText("lighting_setup.json", JsonUtility.ToJson(new SerializedLightList { lights = export }, true));
-        Debug.Log("Exported tagged lighting setup.");
+        Debug.Log("Exported tagged lighting setup");
     }
 
     void ImportLightingFromJson()
