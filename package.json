@@ -1,8 +1,8 @@
 {
   "name": "com.jayakad.lazylight",
-  "version": "1.0.0",
+  "version": "2.2.4",
   "displayName": "Lazy Light Generator",
-  "description": "Auto-generates intelligent lighting in dark Unity scenes.",
+  "description": "Lazy Light Generator is a Unity Editor tool that automates the placement of lights in your scene using smart sampling, geometry awareness, and scene analysis. Whether you're prototyping a level or polishing a cinematic scene, this tool helps you generate high-quality lighting setups in seconds",
   "unity": "2020.3",
   "author": {
     "name": "Jay kadam",
