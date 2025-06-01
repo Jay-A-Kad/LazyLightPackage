@@ -20,8 +20,6 @@ The **Lazy Light Generator** is a Unity Editor tool that automates the placement
 
 ---
 
-## How to Use
-
 ## Installation
 
 You can install the Lazy Light Generator in two ways:
@@ -74,9 +72,7 @@ Click **"Generate Lights"**. This will:
 ---
 
 ## File Structure
-Assets/
-├── Editor/
-    └── LazyLightGenerator.cs
+Assets/Editor/LazyLightGenerator.cs
 
 
 ---
@@ -118,9 +114,8 @@ Assets/
 - Compatible with:
   - Built-in RP
   - URP
-  - HDRP (Area lights + GI support)
+  - HDRP (GI support)
 
----
 
 ## Author
 
