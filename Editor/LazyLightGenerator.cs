@@ -240,7 +240,12 @@ public class LazyLightGenerator : EditorWindow
 
     void ExportLightingToJson()
     {
-        Light[] lights = FindObjectsOfType<Light>();
+#if UNITY_2023_1_OR_NEWER
+        Light[] lights = Object.FindObjectsByType<Light>(FindObjectsSortMode.None);
+#else
+            Light[] lights = Object.FindObjectsOfType<Light>();
+#endif
+
         List<SerializedLight> serializedLights = lights.Select(l => new SerializedLight(l)).ToList();
         string json = JsonUtility.ToJson(new SerializedLightList { lights = serializedLights }, true);
         File.WriteAllText("lighting_setup.json", json);
