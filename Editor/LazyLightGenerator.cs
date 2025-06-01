@@ -11,48 +11,50 @@ using UnityEngine.Rendering.Universal;
 
 public class LazyLightGenerator : EditorWindow
 {
-    private LightingPreset[] presets;
-    private int selectedPresetIndex = 0;
+    private LightType lightType = LightType.Point;
+    private Color lightColor = Color.white;
+    private float intensity = 3.0f;
+    private float range = 10f;
+    private float angle = 60f;
+    private int lightCount = 3;
+    private string groupTag = "GeneratedLight";
+    private bool useAreaLight = false;
+    private bool enableGI = false;
+    private bool previewLightPlacement = true;
 
-    [MenuItem("Tools/Lazy Light Generator")]
+    [MenuItem("Tools/Advanced Light Generator")]
     public static void ShowWindow()
     {
-        GetWindow<LazyLightGenerator>("Lazy Light Generator");
+        GetWindow<LazyLightGenerator>("Advanced Light Generator");
     }
-
-    void OnEnable()
-    {
-        LoadPresets();
-
-        if (presets == null || presets.Length == 0)
-        {
-            CreateDefaultPresets();
-            LoadPresets(); // Reload after creating
-        }
-    }
-
 
     void OnGUI()
     {
-        GUILayout.Label("Scene Lighting Generator", EditorStyles.boldLabel);
+        GUILayout.Label("\ud83d\udd27 Pro Lighting Tool", EditorStyles.boldLabel);
 
-        if (presets != null && presets.Length > 0)
+        lightType = (LightType)EditorGUILayout.EnumPopup("Light Type", lightType);
+        lightColor = EditorGUILayout.ColorField("Light Color", lightColor);
+        intensity = EditorGUILayout.FloatField("Intensity", intensity);
+        range = EditorGUILayout.FloatField("Range", range);
+
+        if (lightType == LightType.Spot)
+            angle = EditorGUILayout.Slider("Spot Angle", angle, 1, 179);
+
+        useAreaLight = EditorGUILayout.Toggle("Use Area Lights (HDRP Only)", useAreaLight);
+        enableGI = EditorGUILayout.Toggle("Enable Global Illumination", enableGI);
+        previewLightPlacement = EditorGUILayout.Toggle("Preview Light Placement", previewLightPlacement);
+
+        lightCount = EditorGUILayout.IntSlider("Light Count", lightCount, 1, 10);
+        groupTag = EditorGUILayout.TextField("Group Tag", groupTag);
+
+        if (GUILayout.Button("Generate Lights"))
         {
-            selectedPresetIndex = EditorGUILayout.Popup("Lighting Preset", selectedPresetIndex, presets.Select(p => p.name).ToArray());
-
-            if (GUILayout.Button("Generate Light"))
-            {
-                GenerateLightWithPreset(presets[selectedPresetIndex]);
-            }
+            GenerateAdvancedLights();
         }
-        else
-        {
-            EditorGUILayout.HelpBox("No lighting presets found. Try reimporting or recompiling.", MessageType.Warning);
-        }
 
-        if (GUILayout.Button("Delete All Lights"))
+        if (GUILayout.Button("Delete All Tagged Lights"))
         {
-            DeleteAllLights();
+            DeleteAllTaggedLights();
         }
 
         if (GUILayout.Button("Export Lighting Setup to JSON"))
@@ -66,211 +68,161 @@ public class LazyLightGenerator : EditorWindow
         }
     }
 
-
-    void CreateDefaultPresets()
+    static Bounds CalculateSceneBounds()
     {
-        string[] defaultNames = { "StudioSetup", "IndoorWarm", "Dramatic", "ShowcaseCool" };
-
-        foreach (string presetName in defaultNames)
-        {
-            string path = $"Assets/LightingPresets/{presetName}.asset";
-            if (AssetDatabase.LoadAssetAtPath<LightingPreset>(path) == null)
-            {
-                Directory.CreateDirectory("Assets/LightingPresets");
-                LightingPreset preset = ScriptableObject.CreateInstance<LightingPreset>();
-                preset.name = presetName;
-
-                switch (presetName)
-                {
-                    case "StudioSetup":
-                        preset.type = LightType.Spot;
-                        preset.color = Color.white;
-                        preset.intensity = 5f;
-                        preset.range = 15f;
-                        preset.angle = 60f;
-                        break;
-
-                    case "IndoorWarm":
-                        preset.type = LightType.Point;
-                        preset.color = new Color(1.0f, 0.92f, 0.7f);
-                        preset.intensity = 3f;
-                        preset.range = 10f;
-                        break;
-
-                    case "Dramatic":
-                        preset.type = LightType.Directional;
-                        preset.color = new Color(1.0f, 0.85f, 0.6f);
-                        preset.intensity = 6f;
-                        preset.range = 20f;
-                        break;
-
-                    case "ShowcaseCool":
-                        preset.type = LightType.Spot;
-                        preset.color = new Color(0.8f, 0.9f, 1.0f);
-                        preset.intensity = 4f;
-                        preset.range = 12f;
-                        preset.angle = 45f;
-                        break;
-                }
-
-                AssetDatabase.CreateAsset(preset, path);
-                AssetDatabase.SaveAssets();
-            }
-        }
-    }
-
-
-
-    void LoadPresets()
-    {
-        string[] guids = AssetDatabase.FindAssets("t:LightingPreset");
-        presets = guids.Select(guid => AssetDatabase.LoadAssetAtPath<LightingPreset>(AssetDatabase.GUIDToAssetPath(guid))).ToArray();
-    }
-
-    static void DeleteAllLights()
-    {
-#if UNITY_2023_1_OR_NEWER
-        var lights = Object.FindObjectsByType<Light>(FindObjectsSortMode.None);
-#else
-        var lights = Object.FindObjectsOfType<Light>();
-#endif
-        foreach (var light in lights)
-        {
-            Undo.DestroyObjectImmediate(light.gameObject);
-        }
-    }
-
-    static void GenerateLightWithPreset(LightingPreset preset)
-    {
-#if UNITY_2023_1_OR_NEWER
-        Light[] existingLights = Object.FindObjectsByType<Light>(FindObjectsSortMode.None);
-#else
-        Light[] existingLights = Object.FindObjectsOfType<Light>();
-#endif
-
-        if (existingLights.Any(l => l != null && l.enabled && l.intensity > 0.5f))
-        {
-            Debug.Log("Scene already has sufficient lighting.");
-            return;
-        }
-
-        var heroObjects = GameObject.FindGameObjectsWithTag("HeroObject");
-        Bounds bounds = CalculateSceneBounds(heroObjects.Length > 0 ? heroObjects : null);
-
-        if (bounds.size == Vector3.zero)
-        {
-            Debug.LogWarning("Scene has no renderers or key objects to light.");
-            return;
-        }
-
-        int lightCount = Mathf.Clamp((int)(bounds.size.magnitude / 10f), 1, 3);
-        Vector3 center = bounds.center;
-
-        for (int i = 0; i < lightCount; i++)
-        {
-            GameObject lightGO = new GameObject($"SmartLight_{i}");
-            Undo.RegisterCreatedObjectUndo(lightGO, "Create Light");
-            Light light = lightGO.AddComponent<Light>();
-
-            light.type = preset.type;
-            light.color = preset.color;
-            light.intensity = preset.intensity;
-            light.range = preset.range;
-            light.shadows = LightShadows.Soft;
-            light.shadowStrength = 0.8f;
-
-#if UNITY_HDRP
-            var hdLight = lightGO.AddComponent<HDAdditionalLightData>();
-            hdLight.intensity = preset.intensity * 100f;
-            hdLight.enableSpotReflector = true;
-#elif UNITY_URP
-            var urpLight = lightGO.AddComponent<UniversalAdditionalLightData>();
-            urpLight.usePipelineSettings = true;
-#endif
-
-            Vector3 offset = new Vector3(
-                Random.Range(-bounds.extents.x * 0.4f, bounds.extents.x * 0.4f),
-                0f,
-                Random.Range(-bounds.extents.z * 0.4f, bounds.extents.z * 0.4f)
-            );
-
-            light.transform.position = center + offset + Vector3.up * (bounds.extents.y + 1.0f);
-
-            if (light.type == LightType.Spot)
-            {
-                light.spotAngle = preset.angle;
-                light.innerSpotAngle = preset.angle * 0.6f;
-                light.transform.LookAt(center);
-            }
-        }
-
-        Debug.Log($"✨ Placed {lightCount} lights using preset: {preset.name}");
-    }
-
-    static Bounds CalculateSceneBounds(GameObject[] targetObjects = null)
-    {
-        List<Renderer> renderers = new List<Renderer>();
-
-        if (targetObjects != null)
-        {
-            foreach (var obj in targetObjects)
-            {
-                renderers.AddRange(obj.GetComponentsInChildren<Renderer>());
-            }
-        }
-        else
-        {
-#if UNITY_2023_1_OR_NEWER
-            renderers.AddRange(Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None));
-#else
-            renderers.AddRange(Object.FindObjectsOfType<Renderer>());
-#endif
-        }
-
-        if (renderers.Count == 0)
-            return new Bounds(Vector3.zero, Vector3.zero);
+        Renderer[] renderers = Object.FindObjectsOfType<Renderer>();
+        if (renderers.Length == 0) return new Bounds(Vector3.zero, Vector3.zero);
 
         Bounds bounds = renderers[0].bounds;
         foreach (Renderer r in renderers)
         {
             bounds.Encapsulate(r.bounds);
         }
-
         return bounds;
+    }
+
+    List<Vector3> PoissonDiskSample(Vector3 center, float radius, int count)
+    {
+        List<Vector3> points = new List<Vector3>();
+        int attempts = 0;
+        while (points.Count < count && attempts < count * 20)
+        {
+            Vector3 candidate = center + Random.insideUnitSphere * radius;
+            if (points.All(p => Vector3.Distance(p, candidate) > radius * 0.8f))
+            {
+                points.Add(candidate);
+            }
+            attempts++;
+        }
+        return points;
+    }
+
+    void GenerateAdvancedLights()
+    {
+        Bounds bounds = CalculateSceneBounds();
+        if (bounds.size == Vector3.zero)
+        {
+            Debug.LogWarning("Scene has no renderers to calculate bounds.");
+            return;
+        }
+
+        GameObject root = new GameObject("LightingRig_" + groupTag);
+        Vector3 center = bounds.center;
+        List<Vector3> positions = PoissonDiskSample(center, range, lightCount);
+
+        foreach (Vector3 pos in positions)
+        {
+            Vector3 placementPos = GetCeilingPosition(pos);
+            GameObject lightGO = new GameObject(groupTag + "_" + positions.IndexOf(pos));
+            lightGO.tag = groupTag;
+            lightGO.transform.parent = root.transform;
+            Undo.RegisterCreatedObjectUndo(lightGO, "Create Light");
+
+            Light light = lightGO.AddComponent<Light>();
+
+#if UNITY_HDRP
+            if (useAreaLight)
+            {
+                light.type = LightType.Rectangle;
+                var hdLight = lightGO.AddComponent<HDAdditionalLightData>();
+                hdLight.intensity = intensity * 100f;
+                hdLight.areaLightShape = AreaLightShape.Rectangle;
+                hdLight.enableSpotReflector = true;
+            }
+            else
+            {
+                light.type = lightType;
+                var hdLight = lightGO.AddComponent<HDAdditionalLightData>();
+                hdLight.intensity = intensity * 100f;
+                hdLight.enableSpotReflector = true;
+            }
+#elif UNITY_URP
+            light.type = lightType;
+            var urp = lightGO.AddComponent<UniversalAdditionalLightData>();
+            urp.usePipelineSettings = true;
+#else
+            light.type = lightType;
+#endif
+
+            light.color = lightColor;
+            light.intensity = intensity;
+            light.range = range;
+            light.shadows = LightShadows.Soft;
+            light.lightmapBakeType = enableGI ? LightmapBakeType.Mixed : LightmapBakeType.Realtime;
+
+            if (light.type == LightType.Spot)
+            {
+                light.spotAngle = angle;
+                light.innerSpotAngle = angle * 0.6f;
+            }
+
+            light.transform.position = placementPos;
+            light.transform.LookAt(center);
+
+            if (previewLightPlacement)
+            {
+                SceneView.lastActiveSceneView.LookAt(placementPos);
+            }
+
+            GameObject probe = new GameObject("ReflectionProbe_" + positions.IndexOf(pos));
+            probe.transform.position = placementPos;
+            var reflection = probe.AddComponent<ReflectionProbe>();
+            reflection.mode = UnityEngine.Rendering.ReflectionProbeMode.Realtime;
+            reflection.refreshMode = UnityEngine.Rendering.ReflectionProbeRefreshMode.EveryFrame;
+            probe.transform.parent = root.transform;
+        }
+
+        Debug.Log($"Generated {lightCount} lights under root '{root.name}'.");
+    }
+
+    Vector3 GetCeilingPosition(Vector3 origin)
+    {
+        Ray ray = new Ray(origin + Vector3.up * 5f, Vector3.down);
+        if (Physics.Raycast(ray, out RaycastHit hit, 10f))
+        {
+            return hit.point + Vector3.up * 0.1f;
+        }
+        return origin;
+    }
+
+    void DeleteAllTaggedLights()
+    {
+        GameObject[] tagged = GameObject.FindGameObjectsWithTag(groupTag);
+        foreach (var go in tagged)
+        {
+            Undo.DestroyObjectImmediate(go);
+        }
+        GameObject root = GameObject.Find("LightingRig_" + groupTag);
+        if (root != null) Undo.DestroyObjectImmediate(root);
+        Debug.Log($"Deleted all lights tagged '{groupTag}'.");
     }
 
     void ExportLightingToJson()
     {
-#if UNITY_2023_1_OR_NEWER
-        Light[] lights = Object.FindObjectsByType<Light>(FindObjectsSortMode.None);
-#else
-            Light[] lights = Object.FindObjectsOfType<Light>();
-#endif
-
-        List<SerializedLight> serializedLights = lights.Select(l => new SerializedLight(l)).ToList();
-        string json = JsonUtility.ToJson(new SerializedLightList { lights = serializedLights }, true);
-        File.WriteAllText("lighting_setup.json", json);
-        Debug.Log("Lighting setup exported to lighting_setup.json");
+        Light[] lights = Object.FindObjectsOfType<Light>();
+        var export = lights.Where(l => l.gameObject.tag == groupTag).Select(l => new SerializedLight(l)).ToList();
+        File.WriteAllText("lighting_setup.json", JsonUtility.ToJson(new SerializedLightList { lights = export }, true));
+        Debug.Log("Exported tagged lighting setup.");
     }
 
     void ImportLightingFromJson()
     {
         if (!File.Exists("lighting_setup.json")) return;
-        string json = File.ReadAllText("lighting_setup.json");
-        var list = JsonUtility.FromJson<SerializedLightList>(json);
-        DeleteAllLights();
-        foreach (var sLight in list.lights)
+        var list = JsonUtility.FromJson<SerializedLightList>(File.ReadAllText("lighting_setup.json"));
+        DeleteAllTaggedLights();
+        foreach (var s in list.lights)
         {
-            GameObject lightGO = new GameObject("ImportedLight");
-            Light light = lightGO.AddComponent<Light>();
-            light.type = sLight.type;
-            light.color = sLight.color;
-            light.intensity = sLight.intensity;
-            light.range = sLight.range;
-            light.transform.position = sLight.position;
-            light.transform.rotation = sLight.rotation;
+            GameObject go = new GameObject("ImportedLight");
+            go.tag = groupTag;
+            var light = go.AddComponent<Light>();
+            light.type = s.type;
+            light.color = s.color;
+            light.intensity = s.intensity;
+            light.range = s.range;
+            light.transform.position = s.position;
+            light.transform.rotation = s.rotation;
         }
-        Debug.Log("Lighting setup imported from lighting_setup.json");
+        Debug.Log("Imported lighting setup from JSON.");
     }
 
     [System.Serializable]
@@ -283,14 +235,14 @@ public class LazyLightGenerator : EditorWindow
         public Vector3 position;
         public Quaternion rotation;
 
-        public SerializedLight(Light light)
+        public SerializedLight(Light l)
         {
-            type = light.type;
-            color = light.color;
-            intensity = light.intensity;
-            range = light.range;
-            position = light.transform.position;
-            rotation = light.transform.rotation;
+            type = l.type;
+            color = l.color;
+            intensity = l.intensity;
+            range = l.range;
+            position = l.transform.position;
+            rotation = l.transform.rotation;
         }
     }
 
@@ -299,14 +251,4 @@ public class LazyLightGenerator : EditorWindow
     {
         public List<SerializedLight> lights;
     }
-}
-
-[CreateAssetMenu(fileName = "LightingPreset", menuName = "Lighting/LightingPreset")]
-public class LightingPreset : ScriptableObject
-{
-    public LightType type;
-    public Color color = Color.white;
-    public float intensity = 3.0f;
-    public float range = 10f;
-    public float angle = 60f;
 }
