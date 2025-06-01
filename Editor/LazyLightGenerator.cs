@@ -74,7 +74,7 @@ public class LazyLightGenerator : EditorWindow
         foreach (string presetName in defaultNames)
         {
             string path = $"Assets/LightingPresets/{presetName}.asset";
-            if (!File.Exists(path))
+            if (AssetDatabase.LoadAssetAtPath<LightingPreset>(path) == null)
             {
                 Directory.CreateDirectory("Assets/LightingPresets");
                 LightingPreset preset = ScriptableObject.CreateInstance<LightingPreset>();
@@ -118,6 +118,7 @@ public class LazyLightGenerator : EditorWindow
             }
         }
     }
+
 
 
     void LoadPresets()
