@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.IO;
 #if UNITY_HDRP
 using UnityEngine.Rendering.HighDefinition;
+#elif UNITY_URP
+using UnityEngine.Rendering.Universal;
 #endif
 
 public class LazyLightGenerator : EditorWindow
@@ -56,7 +58,8 @@ public class LazyLightGenerator : EditorWindow
 
     void CreateDefaultPresets()
     {
-        string[] defaultNames = { "StudioSetup", "IndoorWarm", "Dramatic", "Showcase" };
+        string[] defaultNames = { "StudioSetup", "IndoorWarm", "Dramatic", "ShowcaseCool" };
+
         foreach (string presetName in defaultNames)
         {
             string path = $"Assets/LightingPresets/{presetName}.asset";
@@ -65,22 +68,46 @@ public class LazyLightGenerator : EditorWindow
                 Directory.CreateDirectory("Assets/LightingPresets");
                 LightingPreset preset = ScriptableObject.CreateInstance<LightingPreset>();
                 preset.name = presetName;
+
                 switch (presetName)
                 {
                     case "StudioSetup":
-                        preset.type = LightType.Spot; preset.color = Color.white; preset.intensity = 5f; preset.range = 15f; preset.angle = 60f; break;
+                        preset.type = LightType.Spot;
+                        preset.color = Color.white;
+                        preset.intensity = 5f;
+                        preset.range = 15f;
+                        preset.angle = 60f;
+                        break;
+
                     case "IndoorWarm":
-                        preset.type = LightType.Point; preset.color = new Color(1.0f, 0.95f, 0.8f); preset.intensity = 3f; preset.range = 10f; break;
+                        preset.type = LightType.Point;
+                        preset.color = new Color(1.0f, 0.92f, 0.7f);
+                        preset.intensity = 3f;
+                        preset.range = 10f;
+                        break;
+
                     case "Dramatic":
-                        preset.type = LightType.Directional; preset.color = Color.white; preset.intensity = 6f; preset.range = 20f; break;
-                    case "Showcase":
-                        preset.type = LightType.Spot; preset.color = Color.white; preset.intensity = 4f; preset.range = 12f; preset.angle = 45f; break;
+                        preset.type = LightType.Directional;
+                        preset.color = new Color(1.0f, 0.85f, 0.6f);
+                        preset.intensity = 6f;
+                        preset.range = 20f;
+                        break;
+
+                    case "ShowcaseCool":
+                        preset.type = LightType.Spot;
+                        preset.color = new Color(0.8f, 0.9f, 1.0f);
+                        preset.intensity = 4f;
+                        preset.range = 12f;
+                        preset.angle = 45f;
+                        break;
                 }
+
                 AssetDatabase.CreateAsset(preset, path);
                 AssetDatabase.SaveAssets();
             }
         }
     }
+
 
     void LoadPresets()
     {
@@ -144,6 +171,9 @@ public class LazyLightGenerator : EditorWindow
             var hdLight = lightGO.AddComponent<HDAdditionalLightData>();
             hdLight.intensity = preset.intensity * 100f;
             hdLight.enableSpotReflector = true;
+#elif UNITY_URP
+            var urpLight = lightGO.AddComponent<UniversalAdditionalLightData>();
+            urpLight.usePipelineSettings = true;
 #endif
 
             Vector3 offset = new Vector3(
@@ -162,7 +192,7 @@ public class LazyLightGenerator : EditorWindow
             }
         }
 
-        Debug.Log($"\u2728 Placed {lightCount} lights using preset: {preset.name}");
+        Debug.Log($"✨ Placed {lightCount} lights using preset: {preset.name}");
     }
 
     static Bounds CalculateSceneBounds(GameObject[] targetObjects = null)
