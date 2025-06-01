@@ -104,8 +104,8 @@ Assets/Editor/LazyLightGenerator.cs
 
 - NavMesh-aware placement for corridor lights
 - Auto-classification of `"HeroObjects"` and focused spotlighting
-- Light baking button (coming soon)
-- AI-guided placement with semantic scene parsing (experimental)
+- Light baking button
+- AI-guided placement with semantic scene parsing
 
 
 ## Requirements
