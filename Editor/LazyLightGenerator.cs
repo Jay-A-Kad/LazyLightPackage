@@ -22,9 +22,15 @@ public class LazyLightGenerator : EditorWindow
 
     void OnEnable()
     {
-        CreateDefaultPresets();
         LoadPresets();
+
+        if (presets == null || presets.Length == 0)
+        {
+            CreateDefaultPresets();
+            LoadPresets(); // Reload after creating
+        }
     }
+
 
     void OnGUI()
     {
