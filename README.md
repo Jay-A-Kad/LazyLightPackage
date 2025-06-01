@@ -33,7 +33,7 @@ You can install the Lazy Light Generator in two ways:
 3. Open Unity. The tool will now be accessible from the menu:  
    `Tools > Lazy Light Generator`
 
----
+
 
 ### Method 2: Using Git URL (Recommended for updates)
 
@@ -53,7 +53,7 @@ Go to `Tools > Lazy Light Generator` in the Unity menu bar.
 - Select:
   - Light type: `Point`, `Spot`, or `Area`
   - Light color, intensity, range
-  - Spot angle (if applicable)
+  - Spot angle
 - Toggle options:
   - Area lights (HDRP only)
   - Global Illumination
@@ -73,17 +73,15 @@ Click **"Generate Lights"**. This will:
 
 ---
 
-## 📂 File Structure
-
+## File Structure
 Assets/
 ├── Editor/
-│ └── LazyLightGenerator.cs
+    └── LazyLightGenerator.cs
 
 
 ---
 
-## ⚙️ Technical Documentation
-
+## Technical Documentation
 ### `GenerateAdvancedLights()`
 - Calculates scene bounds via `Renderer[]`
 - Samples points via `PoissonDiskSample()`
@@ -102,12 +100,9 @@ Assets/
 - One probe per light
 - Set to `Realtime` mode, refreshing `EveryFrame`
 
----
-
 ## Test Photos
 
 
----
 
 ## ToDo List
 
@@ -116,7 +111,6 @@ Assets/
 - Light baking button (coming soon)
 - AI-guided placement with semantic scene parsing (experimental)
 
----
 
 ## Requirements
 
@@ -125,12 +119,6 @@ Assets/
   - Built-in RP
   - URP
   - HDRP (Area lights + GI support)
-
----
-
-## License
-
-MIT License
 
 ---
 
