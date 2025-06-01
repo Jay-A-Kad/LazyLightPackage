@@ -107,6 +107,11 @@ Assets/Editor/LazyLightGenerator.cs
 <img width="1143" alt="after_1" src="https://github.com/user-attachments/assets/abf5a3cf-22c5-44ff-bc61-091978dd24dc" />
 
 
+## Credits
+Mini Toon | Modular Office | Free Demo by João Baltieri
+http://assetstore.unity.com/publishers/20594
+
+
 ## ToDo List
 
 - NavMesh-aware placement for corridor lights
